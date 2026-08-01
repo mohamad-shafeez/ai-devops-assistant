@@ -46,16 +46,21 @@ function buildFileTree(data: AnalysisResponse): TreeNode[] {
 
 // ── Helper: Pipeline stages from response ────────────────────────────────────
 function buildPipelineStages(data: AnalysisResponse): PipelineStage[] {
-  const stages: { id: string; label: string; check: boolean }[] = [
-    { id: 'arch', label: 'Architecture Analyzed', check: !!data.architectureDocs },
-    { id: 'docker', label: 'Dockerfile Generated', check: !!data.dockerfile },
-    { id: 'compose', label: 'Compose Created', check: !!data.dockerCompose },
-    { id: 'ci', label: 'CI/CD Pipeline Built', check: !!data.githubActions },
-    { id: 'k8s', label: 'K8s Manifests Generated', check: !!data.kubernetes },
-    { id: 'security', label: 'Security Scanned', check: !!data.securityReview },
-    { id: 'score', label: 'Health Score Computed', check: !!data.healthScore },
+  const stages = [
+    { id: 'arch', label: 'Architecture Analyzed', check: !!data.architectureDocs, icon: FileText },
+    { id: 'docker', label: 'Dockerfile Generated', check: !!data.dockerfile, icon: Container },
+    { id: 'compose', label: 'Compose Created', check: !!data.dockerCompose, icon: Layers },
+    { id: 'ci', label: 'CI/CD Pipeline Built', check: !!data.githubActions, icon: GitBranch },
+    { id: 'k8s', label: 'K8s Manifests Generated', check: !!data.kubernetes, icon: Cpu },
+    { id: 'security', label: 'Security Scanned', check: !!data.securityReview, icon: Shield },
+    { id: 'score', label: 'Health Score Computed', check: !!data.healthScore, icon: BarChart3 },
   ];
-  return stages.map(s => ({ ...s, status: s.check ? 'completed' : 'pending' }));
+  return stages.map(s => ({
+    id: s.id,
+    label: s.label,
+    status: s.check ? 'completed' : 'pending',
+    icon: s.icon,
+  }));
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
@@ -314,10 +319,10 @@ export default function AnalysisResults({ data }: AnalysisResultsProps) {
             <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Score Breakdown
             </h3>
-            <ScoreMeter label="Security" score={data.securityScore || 0} />
-            <ScoreMeter label="Deployment Ready" score={data.deploymentReadiness || 0} />
-            <ScoreMeter label="Container Ready" score={data.containerReadiness || 0} />
-            <ScoreMeter label="Complexity" score={data.complexity || 0} description="Lower is better for maintainability" />
+            <ScoreMeter label="Security" value={data.securityScore || 0} color="emerald" />
+            <ScoreMeter label="Deployment Ready" value={data.deploymentReadiness || 0} color="indigo" />
+            <ScoreMeter label="Container Ready" value={data.containerReadiness || 0} color="blue" />
+            <ScoreMeter label="Complexity" value={data.complexity || 0} color="amber" />
           </div>
 
           {/* Tech Stack */}

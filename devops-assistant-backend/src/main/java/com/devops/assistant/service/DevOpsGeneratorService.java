@@ -2,7 +2,10 @@ package com.devops.assistant.service;
 
 import com.devops.assistant.dto.AnalysisRequest;
 import com.devops.assistant.dto.AnalysisResponse;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -30,15 +33,21 @@ import java.util.regex.Pattern;
  *   GeminiApiService.generateContent() automatically retries up to 4 times
  *   with 2 s → 4 s → 8 s delays before giving up.
  */
+@Slf4j
 @Service
 public class DevOpsGeneratorService {
 
     private final GeminiApiService geminiApiService;
+    private final GroqApiService groqApiService;
     private final GithubService githubService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
+            .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER.mappedFeature());
 
-    public DevOpsGeneratorService(GeminiApiService geminiApiService, GithubService githubService) {
+    public DevOpsGeneratorService(GeminiApiService geminiApiService, GroqApiService groqApiService, GithubService githubService) {
         this.geminiApiService = geminiApiService;
+        this.groqApiService = groqApiService;
         this.githubService = githubService;
     }
 
@@ -48,9 +57,19 @@ public class DevOpsGeneratorService {
 
     public AnalysisResponse analyzeAndGenerate(AnalysisRequest request) {
         String codeContext = buildCodeContext(request);
+        String prompt = buildUnifiedPrompt(codeContext);
 
-        // ONE single API call instead of 12 — stays well under the 15 RPM limit
-        String rawJson = geminiApiService.generateContent(buildUnifiedPrompt(codeContext));
+        String rawJson;
+        try {
+            log.info("Generating infrastructure via primary provider (Gemini)...");
+            rawJson = geminiApiService.generateContent(prompt);
+            if (rawJson != null && rawJson.startsWith("Error")) {
+                throw new RuntimeException(rawJson);
+            }
+        } catch (Exception e) {
+            log.warn("Gemini API failed or unavailable (Error: {}). Switching to Groq fallback...", e.getMessage());
+            rawJson = groqApiService.generateContent(prompt);
+        }
 
         // Parse the JSON response (or fall back to empty strings on parse error)
         Map<String, Object> parsed = parseJsonResponse(rawJson);
@@ -168,21 +187,26 @@ public class DevOpsGeneratorService {
     @SuppressWarnings("unchecked")
     private Map<String, Object> parseJsonResponse(String raw) {
         if (raw == null || raw.startsWith("Error")) {
-            System.err.println("[DevOpsGeneratorService] Gemini returned an error: " + raw);
+            log.error("AI API returned error response: {}", raw);
             return Map.of();
         }
 
-        // Strip markdown fences like ```json ... ``` if present
         String cleaned = raw.trim();
-        if (cleaned.startsWith("```")) {
+
+        // Extract JSON object by finding outer braces
+        int firstBrace = cleaned.indexOf('{');
+        int lastBrace = cleaned.lastIndexOf('}');
+        if (firstBrace != -1 && lastBrace > firstBrace) {
+            cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+        } else if (cleaned.startsWith("```")) {
             cleaned = cleaned.replaceAll("^```[a-zA-Z]*\\s*", "").replaceAll("\\s*```$", "").trim();
         }
 
         try {
             return objectMapper.readValue(cleaned, Map.class);
         } catch (Exception e) {
-            System.err.println("[DevOpsGeneratorService] Failed to parse Gemini JSON response: " + e.getMessage());
-            System.err.println("[DevOpsGeneratorService] Raw response was:\n" + raw);
+            log.error("Failed to parse AI JSON response: {}", e.getMessage());
+            log.debug("Raw response was:\n{}", raw);
             return Map.of();
         }
     }

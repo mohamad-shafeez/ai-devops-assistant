@@ -133,6 +133,7 @@ export default function WorkspacePanel({
             {TABS.map((tab) => (
               <button
                 key={tab.id}
+                suppressHydrationWarning
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   'flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative',
@@ -185,6 +186,7 @@ export default function WorkspacePanel({
                       </div>
                       <textarea
                         ref={textareaRef}
+                        suppressHydrationWarning
                         value={codeSnippet}
                         onChange={(e) => setCodeSnippet(e.target.value)}
                         placeholder={PLACEHOLDER_CODE}
@@ -285,13 +287,7 @@ export default function WorkspacePanel({
                       />
                     </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-amber-50 border border-amber-100">
-                    <p className="text-sm text-amber-800 font-medium">ℹ️ GitHub Analysis</p>
-                    <p className="text-xs text-amber-700 mt-1">
-                      Currently the repository URL is sent to the AI for analysis context.
-                      Direct GitHub API integration with file tree parsing is coming soon.
-                    </p>
-                  </div>
+
                 </motion.div>
               )}
             </AnimatePresence>
@@ -313,6 +309,7 @@ export default function WorkspacePanel({
             {/* Submit */}
             <motion.button
               type="submit"
+              suppressHydrationWarning
               disabled={loading || !isValid}
               onClick={(e) => onSubmit(e as unknown as React.FormEvent)}
               whileHover={!loading && isValid ? { scale: 1.01 } : {}}

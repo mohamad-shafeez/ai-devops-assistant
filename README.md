@@ -12,9 +12,29 @@
 
 ---
 
+## 🎥 Live Demo
+
+📹 **Project Walkthrough (1 min 30 sec)**
+
+https://drive.google.com/file/d/1SVy8shQxEdl5-cUGS9U3uJmkA_4H1TXR/view?usp=sharing
+
+### Demo Timeline
+
+| Time | Feature |
+|-------|---------|
+| 0:00–0:08 | Platform overview & supported DevOps generators |
+| 0:08–0:17 | GitHub repository analysis |
+| 0:18–0:51 | Live AI infrastructure generation |
+| 0:52–1:07 | Docker, Compose, Kubernetes, Helm & Terraform |
+| 1:08–1:15 | Automated security audit |
+| 1:16–1:23 | Deployment readiness report |
+| 1:24–1:30 | Health scoring & ZIP export |
+
+---
+
 ## ✨ Features
 
-Provide your source code (paste code, upload files, or provide a GitHub repository URL) and DevOpsAI generates **11 complete infrastructure artifacts** in a single pass:
+Provide your source code (paste code, upload files, or provide a GitHub repository URL) and DevOpsAI generates **12 production-ready DevOps artifacts** in a single pass:
 
 | Artifact | Description |
 |---|---|
@@ -35,19 +55,54 @@ Provide your source code (paste code, upload files, or provide a GitHub reposito
 
 ## 🏗️ System Architecture
 
+### Architecture Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant NextJS as Next.js 14 Frontend
+    participant Spring as Spring Boot 3 Backend
+    participant GH as GitHub REST API
+    participant Gemini as Google Gemini AI
+    participant DB as PostgreSQL 16 (Flyway V1)
+
+    User->>NextJS: Submit Code Snippet / Upload / GitHub URL
+    NextJS->>Spring: POST /api/v1/analysis (AnalysisRequest)
+    alt GitHub Repository URL Provided
+        Spring->>GH: GET /repos/{owner}/{repo}/git/trees/{branch}?recursive=1
+        GH-->>Spring: File Tree Metadata (Filtered)
+    end
+    Spring->>Gemini: POST generateContent (Unified Single Prompt)
+    Gemini-->>Spring: Unified JSON (12 Artifacts + Scores + Tech Stack)
+    Spring->>DB: Save Entity (ProjectAnalysis)
+    Spring-->>NextJS: HTTP 200 OK (AnalysisResponse DTO)
+    NextJS->>User: Render File Tree, Code Viewers, Score Meters & ZIP Download
+```
+
+> 📌 A complete architectural walkthrough is included in the demo video above.
+
+### Repository Project Structure
+
 ```
 ai-devops-assistant/
 ├── docker-compose.yml              # Multi-container orchestration (Postgres, Backend, Frontend)
 ├── .env.example                    # Global environment variables template
 ├── start-backend.bat               # Windows startup script
+├── docs/                           # Documentation and screenshots
+│   └── screenshots/                # Application UI screenshots
 ├── devops-assistant-backend/       # Spring Boot 3 Java 17 REST API
 │   ├── Dockerfile                  # Multi-stage Java build
+│   └── src/main/resources/
+│       └── db/migration/
+│           └── V1__init_schema.sql  # Flyway database schema migration
 │   └── src/main/java/com/devops/assistant/
 │       ├── config/                 # CORS & Gemini Beans
 │       ├── controller/             # REST Endpoints (AnalysisController, HealthController)
-│       ├── dto/                    # AnalysisRequest DTO & AnalysisResponse DTO
+│       ├── dto/                    # AnalysisRequest, AnalysisResponse, ErrorResponse DTOs
+│       ├── exception/              # GlobalExceptionHandler (@RestControllerAdvice)
 │       ├── model/                  # ProjectAnalysis JPA Entity
-│       ├── repository/             # ProjectAnalysisRepository
+│       ├── repository/             # ProjectAnalysisRepository (Pageable)
 │       └── service/                # DevOpsGeneratorService, GeminiApiService, GithubService
 └── devops-assistant-frontend/      # Next.js 14 Web Application
     ├── Dockerfile                  # Multi-stage Node 20 runner
@@ -88,9 +143,41 @@ ai-devops-assistant/
 
 ## ⚡ Unified LLM Prompt Engineering & Resilience
 
-- **Single-Pass Prompting:** Rather than issuing 11 separate requests, `DevOpsGeneratorService` sends a single structured JSON prompt to Gemini. This reduces LLM API consumption by **91.6%**, remaining safely within free-tier rate limits.
+- **Single-Pass Prompting:** Rather than issuing 12 separate requests, `DevOpsGeneratorService` sends a single structured JSON prompt to Gemini. Using a single structured prompt significantly reduces the number of LLM API requests compared to generating each artifact independently.
 - **Exponential Backoff Retry:** `GeminiApiService` handles transient HTTP `429 Too Many Requests` and HTTP `503` errors by automatically retrying up to 4 times with exponential backoff delays (2s → 4s → 8s).
 - **GitHub REST API Integration:** When a GitHub URL is provided, `GithubService` queries `api.github.com` for tree metadata to feed rich repository structure into the LLM context.
+
+---
+
+## 📷 Screenshots
+
+### Landing Page
+![Landing Page](docs/screenshots/landing-page.png)
+
+### Infrastructure Generator
+![Infrastructure Generator](docs/screenshots/generators-grid.png)
+
+### Generated Kubernetes
+![Generated Kubernetes](docs/screenshots/kubernetes-manifests.png)
+
+### Security Dashboard
+![Security Dashboard](docs/screenshots/security-dashboard.png)
+
+---
+
+## ⭐ Engineering Highlights
+
+- AI-powered DevOps artifact generation from source code and GitHub repositories
+- Spring Boot 3 REST API with layered architecture
+- Next.js 14 frontend using App Router and TypeScript
+- Flyway database migrations for reproducible schema management
+- PostgreSQL persistence with Spring Data JPA
+- Docker Compose deployment for frontend, backend, and database
+- GitHub REST API integration for repository analysis
+- Global exception handling with standardized JSON responses
+- Reactive WebClient integration with retry strategy
+- Automated testing using JUnit 5 and MockMvc
+- Health monitoring with Spring Boot Actuator
 
 ---
 
@@ -143,20 +230,28 @@ npm run dev
 
 ---
 
-## 🧪 Running Automated Tests
+## ✅ Verification
 
-Run backend controller and service unit tests:
+Backend automated tests:
+
 ```bash
-cd devops-assistant-backend
 mvn clean test
 ```
+
+Current status:
+- ✔ Controller Tests
+- ✔ Service Tests
+- ✔ Validation Tests
+- ✔ Build Successful
+
+Tests Passed: 4/4
 
 ---
 
 ## 📡 API Reference
 
 ### `POST /api/v1/analysis`
-Analyzes code or repository structure and generates 11 DevOps infrastructure artifacts.
+Analyzes code or repository structure and generates 12 DevOps infrastructure artifacts.
 
 **Request:**
 ```json
@@ -202,6 +297,18 @@ Returns all execution analysis records saved in PostgreSQL database.
 
 ### `GET /api/health`
 Returns HTTP 200 `"OK"` for container health probes.
+
+---
+
+## 🚧 Roadmap
+
+- OAuth GitHub authentication
+- Repository diff analysis
+- Azure & GCP Terraform generation
+- GitLab CI support
+- Docker image vulnerability scanning
+- Multi-LLM provider selection
+- Deployment cost estimation
 
 ---
 

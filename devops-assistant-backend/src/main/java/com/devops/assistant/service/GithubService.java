@@ -2,30 +2,46 @@ package com.devops.assistant.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 public class GithubService {
 
     @Value("${github.token:}")
     private String githubToken;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public GithubService(WebClient webClient) {
+        this.webClient = webClient;
+    }
 
     private static final Pattern GITHUB_URL_PATTERN = Pattern.compile(
             "github\\.com/([^/]+)/([^/\\.]+)"
     );
 
-    /**
-     * Parses a GitHub URL or owner/repo string to fetch recursive tree metadata via GitHub REST API.
-     */
+    private static final Set<String> IGNORED_EXTENSIONS = Set.of(
+            "png", "jpg", "jpeg", "gif", "ico", "svg", "webp", "pdf", "zip", "tar", "gz", "7z", "jar",
+            "mp3", "mp4", "mov", "woff", "woff2", "ttf", "eot", "exe", "dll", "so", "dylib", "pyc", "class"
+    );
+
+    private static final Set<String> IGNORED_EXACT_NAMES = Set.of(
+            "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "cargo.lock", "go.sum", "composer.lock"
+    );
+
+    private static final String[] IGNORED_DIRECTORY_PREFIXES = {
+            "node_modules/", ".git/", ".next/", "target/", "dist/", "build/", ".idea/", ".vscode/", "coverage/"
+    };
+
     public String fetchGithubRepoTree(String repositoryUrl) {
         if (repositoryUrl == null || repositoryUrl.isBlank()) {
             return "";
@@ -33,19 +49,22 @@ public class GithubService {
 
         String[] ownerAndRepo = parseOwnerAndRepo(repositoryUrl);
         if (ownerAndRepo == null) {
+            log.warn("Invalid GitHub URL format provided: {}", repositoryUrl);
             return "Repository URL provided: " + repositoryUrl;
         }
 
         String owner = ownerAndRepo[0];
         String repo = ownerAndRepo[1];
 
-        // Try main branch first, fall back to master
+        log.info("Fetching GitHub repository tree for {}/{}", owner, repo);
+
         String treeContent = fetchTreeForBranch(owner, repo, "main");
         if (treeContent.isEmpty() || treeContent.startsWith("Error")) {
             treeContent = fetchTreeForBranch(owner, repo, "master");
         }
 
         if (treeContent.isEmpty() || treeContent.startsWith("Error")) {
+            log.warn("Unable to fetch repository tree for {}/{}", owner, repo);
             return "GitHub Repository: " + owner + "/" + repo + "\n(Unable to fetch recursive tree from GitHub API)";
         }
 
@@ -68,22 +87,24 @@ public class GithubService {
         String apiUrl = String.format("https://api.github.com/repos/%s/%s/git/trees/%s?recursive=1", owner, repo, branch);
 
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("User-Agent", "DevOpsAI-Platform");
-            headers.set("Accept", "application/vnd.github.v3+json");
+            WebClient.RequestHeadersSpec<?> requestSpec = webClient.get()
+                    .uri(apiUrl)
+                    .header("User-Agent", "DevOpsAI-Platform")
+                    .header("Accept", "application/vnd.github.v3+json");
 
             if (githubToken != null && !githubToken.isBlank()) {
-                headers.set("Authorization", "Bearer " + githubToken);
+                requestSpec = requestSpec.header("Authorization", "Bearer " + githubToken);
             }
 
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, String.class);
+            String responseBody = requestSpec.retrieve()
+                    .bodyToMono(String.class)
+                    .block();
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return formatTreeResponse(response.getBody());
+            if (responseBody != null) {
+                return formatTreeResponse(responseBody);
             }
         } catch (Exception e) {
-            System.err.println("[GithubService] Failed to fetch GitHub tree for " + owner + "/" + repo + " (" + branch + "): " + e.getMessage());
+            log.warn("Failed to fetch GitHub tree for {}/{} (branch: {}): {}", owner, repo, branch, e.getMessage());
         }
         return "";
     }
@@ -96,26 +117,52 @@ public class GithubService {
                 return "";
             }
 
-            StringBuilder sb = new StringBuilder("File Structure:\n");
+            StringBuilder sb = new StringBuilder("Filtered File Structure:\n");
             int count = 0;
             for (JsonNode item : treeNode) {
                 String path = item.has("path") ? item.get("path").asText() : "";
                 String type = item.has("type") ? item.get("type").asText() : "file";
 
-                if (!path.isEmpty()) {
+                if (shouldIncludePath(path)) {
                     sb.append(type.equals("tree") ? " 📁 " : " 📄 ").append(path).append("\n");
                     count++;
                 }
 
-                // Limit output to prevent exceeding prompt tokens
-                if (count >= 150) {
-                    sb.append("... (showing first 150 files)\n");
+                if (count >= 100) {
+                    sb.append("... (showing top 100 relevant files)\n");
                     break;
                 }
             }
             return sb.toString();
         } catch (Exception e) {
+            log.error("Failed to parse GitHub tree JSON: ", e);
             return "";
         }
+    }
+
+    private boolean shouldIncludePath(String path) {
+        if (path == null || path.isBlank()) return false;
+
+        String lowerPath = path.toLowerCase();
+
+        for (String dirPrefix : IGNORED_DIRECTORY_PREFIXES) {
+            if (lowerPath.startsWith(dirPrefix) || lowerPath.contains("/" + dirPrefix)) {
+                return false;
+            }
+        }
+
+        String filename = lowerPath.contains("/") ? lowerPath.substring(lowerPath.lastIndexOf('/') + 1) : lowerPath;
+        if (IGNORED_EXACT_NAMES.contains(filename)) {
+            return false;
+        }
+
+        if (filename.contains(".")) {
+            String ext = filename.substring(filename.lastIndexOf('.') + 1);
+            if (IGNORED_EXTENSIONS.contains(ext)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

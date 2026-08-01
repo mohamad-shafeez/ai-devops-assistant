@@ -5,14 +5,18 @@ import com.devops.assistant.dto.AnalysisResponse;
 import com.devops.assistant.model.ProjectAnalysis;
 import com.devops.assistant.repository.ProjectAnalysisRepository;
 import com.devops.assistant.service.DevOpsGeneratorService;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/analysis")
-@CrossOrigin(origins = "*")
 public class AnalysisController {
 
     private final DevOpsGeneratorService generatorService;
@@ -24,52 +28,47 @@ public class AnalysisController {
     }
 
     @PostMapping
-    public ResponseEntity<?> analyzeCode(@jakarta.validation.Valid @RequestBody AnalysisRequest request) {
-        try {
-            AnalysisResponse response = generatorService.analyzeAndGenerate(request);
+    public ResponseEntity<AnalysisResponse> analyzeCode(@Valid @RequestBody AnalysisRequest request) {
+        log.info("Received DevOps analysis request for project: '{}'", request.getProjectName());
 
-            // Persist to database
-            ProjectAnalysis entity = ProjectAnalysis.builder()
-                    .projectName(request.getProjectName())
-                    .architectureDocs(response.getArchitectureDocs())
-                    .dockerfile(response.getDockerfile())
-                    .dockerCompose(response.getDockerCompose())
-                    .githubActions(response.getGithubActions())
-                    .kubernetes(response.getKubernetes())
-                    .helmChart(response.getHelmChart())
-                    .terraform(response.getTerraform())
-                    .securityReview(response.getSecurityReview())
-                    .codeReview(response.getCodeReview())
-                    .envExample(response.getEnvExample())
-                    .deploymentReport(response.getDeploymentReport())
-                    .recommendations(response.getRecommendations())
-                    .healthScore(response.getHealthScore())
-                    .securityScore(response.getSecurityScore())
-                    .deploymentReadiness(response.getDeploymentReadiness())
-                    .containerReadiness(response.getContainerReadiness())
-                    .complexity(response.getComplexity())
-                    .riskScore(response.getRiskScore())
-                    .build();
-            repository.save(entity);
+        AnalysisResponse response = generatorService.analyzeAndGenerate(request);
 
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            System.err.println("DevOps analysis failed for project: " + request.getProjectName());
-            e.printStackTrace();
+        // Persist entity to database
+        ProjectAnalysis entity = ProjectAnalysis.builder()
+                .projectName(request.getProjectName())
+                .architectureDocs(response.getArchitectureDocs())
+                .dockerfile(response.getDockerfile())
+                .dockerCompose(response.getDockerCompose())
+                .githubActions(response.getGithubActions())
+                .kubernetes(response.getKubernetes())
+                .helmChart(response.getHelmChart())
+                .terraform(response.getTerraform())
+                .securityReview(response.getSecurityReview())
+                .codeReview(response.getCodeReview())
+                .envExample(response.getEnvExample())
+                .deploymentReport(response.getDeploymentReport())
+                .recommendations(response.getRecommendations())
+                .healthScore(response.getHealthScore())
+                .securityScore(response.getSecurityScore())
+                .deploymentReadiness(response.getDeploymentReadiness())
+                .containerReadiness(response.getContainerReadiness())
+                .complexity(response.getComplexity())
+                .riskScore(response.getRiskScore())
+                .build();
 
-            // Handle Gemini API Rate Limit / Quota Exceeded specifically
-            if (e.getMessage() != null && e.getMessage().contains("429")) {
-                return ResponseEntity.status(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS)
-                        .body(java.util.Map.of("error", "Gemini API rate limit reached (5 RPM on Free Tier). Please wait 30 seconds and try again."));
-            }
+        repository.save(entity);
+        log.info("Successfully analyzed and persisted project: '{}'", request.getProjectName());
 
-            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(java.util.Map.of("error", "Failed to analyze repository: " + e.getMessage()));
-        }
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/history")
-    public ResponseEntity<List<ProjectAnalysis>> getHistory() {
-        return ResponseEntity.ok(repository.findAll());
+    public ResponseEntity<Page<ProjectAnalysis>> getHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        log.info("Fetching execution history (page: {}, size: {})", page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return ResponseEntity.ok(repository.findAll(pageable));
     }
 }

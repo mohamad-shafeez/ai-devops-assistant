@@ -5,19 +5,41 @@ spring:
   application:
     name: devops-assistant-backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/devops_db
-    username: devops_user
-    password: devops_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/devops_db}
+    username: ${SPRING_DATASOURCE_USERNAME:devops_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:devops_password}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
 
 gemini:
   api:
     key: ${GEMINI_API_KEY:}
     url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+
+groq:
+  api:
+    key: ${GROQ_API_KEY:}
+    url: https://api.groq.com/openai/v1/chat/completions
+    model: llama-3.3-70b-versatile
+
+github:
+  token: ${GITHUB_TOKEN:}

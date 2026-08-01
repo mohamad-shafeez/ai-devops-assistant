@@ -1,44 +1,66 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { cn, getScoreBg, getScoreColor, getScoreLabel } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface ScoreMeterProps {
+  value: number;
   label: string;
-  score: number;
-  description?: string;
-  size?: 'sm' | 'md';
+  size?: number;
+  color?: 'emerald' | 'amber' | 'red' | 'indigo' | 'blue';
 }
 
-export default function ScoreMeter({ label, score, description, size = 'md' }: ScoreMeterProps) {
-  const color = getScoreColor(score);
-  const bg = getScoreBg(score);
-  const text = getScoreLabel(score);
+export default function ScoreMeter({ value, label, size = 80, color = 'indigo' }: ScoreMeterProps) {
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (value / 100) * circumference;
+
+  const colorMap = {
+    emerald: { text: 'text-emerald-600', stroke: 'stroke-emerald-500' },
+    amber: { text: 'text-amber-600', stroke: 'stroke-amber-500' },
+    red: { text: 'text-red-600', stroke: 'stroke-red-500' },
+    indigo: { text: 'text-indigo-600', stroke: 'stroke-indigo-500' },
+    blue: { text: 'text-blue-600', stroke: 'stroke-blue-500' },
+  };
+
+  const colors = colorMap[color];
 
   return (
-    <div className={cn('space-y-1.5', size === 'sm' ? 'text-xs' : 'text-sm')}>
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-slate-700">{label}</span>
-        <div className="flex items-center gap-2">
-          <span className={cn('font-bold tabular-nums', color)}>{score}</span>
-          <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded-md', color, 'bg-opacity-10',
-            score >= 80 ? 'bg-emerald-50' : score >= 60 ? 'bg-amber-50' : 'bg-red-50'
-          )}>
-            {text}
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="-rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            className="text-slate-100"
+          />
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            className={colors.stroke}
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.5, ease: 'easeOut', delay: 0.3 }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className={cn('text-lg font-bold', colors.text)}>
+            {value}
           </span>
         </div>
       </div>
-      <div className="score-bar">
-        <motion.div
-          className={cn('score-fill', bg)}
-          initial={{ width: 0 }}
-          animate={{ width: `${score}%` }}
-          transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
-        />
-      </div>
-      {description && (
-        <p className="text-[11px] text-slate-400">{description}</p>
-      )}
+      <span className="text-xs font-medium text-slate-600 text-center">{label}</span>
     </div>
   );
 }

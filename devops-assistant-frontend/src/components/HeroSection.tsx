@@ -1,203 +1,165 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Sparkles, GitBranch, Shield, Container, Cpu, ChevronDown } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowRight, GitBranch, Container, Shield, Workflow } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
-const TYPING_PHRASES = [
-  'Dockerfile in seconds.',
-  'Kubernetes manifests instantly.',
-  'GitHub Actions CI/CD pipelines.',
-  'Helm charts automatically.',
-  'Terraform configs on demand.',
-  'Security audits in one click.',
+const codeSnippets = [
+  { lang: 'dockerfile', code: 'FROM node:20-alpine\nWORKDIR /app\nCOPY . .\nRUN npm ci', color: 'bg-blue-500' },
+  { lang: 'yaml', code: 'name: CI/CD\non: [push]\njobs:\n  build:\n    runs-on: ubuntu', color: 'bg-amber-500' },
+  { lang: 'json', code: '{\n  "name": "api-gateway",\n  "version": "2.1.0"\n}', color: 'bg-emerald-500' },
 ];
 
-const FLOATING_CARDS = [
-  {
-    icon: Container,
-    label: 'Dockerfile',
-    sublabel: 'Multi-stage • Optimized',
-    color: 'from-blue-500 to-cyan-500',
-    delay: 0,
-  },
-  {
-    icon: GitBranch,
-    label: 'CI/CD Pipeline',
-    sublabel: 'GitHub Actions • Auto',
-    color: 'from-violet-500 to-purple-500',
-    delay: 1.5,
-  },
-  {
-    icon: Shield,
-    label: 'Security Audit',
-    sublabel: 'Secrets • Deps • Config',
-    color: 'from-emerald-500 to-teal-500',
-    delay: 3,
-  },
-  {
-    icon: Cpu,
-    label: 'K8s Manifests',
-    sublabel: 'Deploy • Scale • Monitor',
-    color: 'from-amber-500 to-orange-500',
-    delay: 4.5,
-  },
+const stats = [
+  { label: 'Pipelines Generated', value: '12,400+' },
+  { label: 'Time Saved', value: '840h' },
+  { label: 'Security Scans', value: '98.9%' },
 ];
-
-const STATS = [
-  { value: '12+', label: 'Artifacts Generated' },
-  { value: '<60s', label: 'Analysis Time' },
-  { value: '100%', label: 'AI-Powered' },
-  { value: 'Free', label: 'To Get Started' },
-];
-
-function TypingAnimation() {
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [displayed, setDisplayed] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [speed, setSpeed] = useState(80);
-
-  useEffect(() => {
-    const phrase = TYPING_PHRASES[phraseIdx];
-    const timeout = setTimeout(() => {
-      if (!isDeleting) {
-        setDisplayed(phrase.slice(0, displayed.length + 1));
-        if (displayed.length + 1 === phrase.length) {
-          setTimeout(() => setIsDeleting(true), 1800);
-          setSpeed(50);
-        }
-      } else {
-        setDisplayed(phrase.slice(0, displayed.length - 1));
-        if (displayed.length === 0) {
-          setIsDeleting(false);
-          setPhraseIdx((i) => (i + 1) % TYPING_PHRASES.length);
-          setSpeed(80);
-        }
-      }
-    }, speed);
-    return () => clearTimeout(timeout);
-  }, [displayed, isDeleting, phraseIdx, speed]);
-
-  return (
-    <span className="text-gradient">
-      {displayed}
-      <span className="animate-cursor inline-block w-0.5 h-8 bg-indigo-500 ml-1 align-middle" />
-    </span>
-  );
-}
 
 export default function HeroSection() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  const [typedText, setTypedText] = useState('');
+  const fullText = 'production-ready infrastructure';
+
+  useEffect(() => {
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i <= fullText.length) {
+        setTypedText(fullText.slice(0, i));
+        i++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 50);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <section ref={ref} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden gradient-mesh pt-16">
-      {/* Decorative blobs */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-indigo-100/40 blur-3xl pointer-events-none animate-glow" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] rounded-full bg-violet-100/30 blur-3xl pointer-events-none animate-glow" style={{ animationDelay: '1.5s' }} />
-      <div className="absolute top-1/2 right-1/3 w-[300px] h-[300px] rounded-full bg-cyan-100/20 blur-3xl pointer-events-none" />
+    <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-indigo-200/40 rounded-full blur-[120px] animate-pulse-glow" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-violet-200/40 rounded-full blur-[100px] animate-pulse-glow" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-[150px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px)] bg-[size:64px_64px]" />
+      </div>
 
-      <motion.div style={{ y, opacity }} className="relative z-10 max-w-6xl mx-auto px-6 text-center">
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-medium mb-8"
-        >
-          <Sparkles className="w-4 h-4" />
-          Powered by Gemini 2.5 Flash · 12 Generators · One Click
-        </motion.div>
-
-        {/* Headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 leading-[1.1] tracking-tight mb-6"
-        >
-          Generate your{' '}
-          <br className="hidden md:block" />
-          <TypingAnimation />
-        </motion.h1>
-
-        {/* Subheading */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed mb-10"
-        >
-          Paste your source code, upload project files, or point to a GitHub repo.
-          DevOpsAI generates production-ready infrastructure in under 60 seconds.
-        </motion.p>
-
-        {/* CTAs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
-        >
-          <a href="#workspace" className="btn-primary text-base px-8 py-3.5 rounded-2xl">
-            Start Generating
-            <ArrowRight className="w-5 h-5" />
-          </a>
-          <a href="#features" className="btn-secondary text-base px-8 py-3.5 rounded-2xl">
-            See All Features
-          </a>
-        </motion.div>
-
-        {/* Stats Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto mb-20"
-        >
-          {STATS.map((stat, i) => (
-            <div key={i} className="text-center">
-              <div className="text-3xl font-bold text-slate-900">{stat.value}</div>
-              <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Floating Cards */}
-        <div className="relative flex flex-wrap justify-center gap-4">
-          {FLOATING_CARDS.map((card, i) => (
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+          >
             <motion.div
-              key={card.label}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 + i * 0.1 }}
-              style={{ animationDelay: `${card.delay}s` }}
-              className="animate-float card p-4 flex items-center gap-3 min-w-[200px]"
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-medium mb-6"
             >
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center shadow-md flex-shrink-0`}>
-                <card.icon className="w-5 h-5 text-white" />
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-semibold text-slate-900">{card.label}</div>
-                <div className="text-xs text-slate-500">{card.sublabel}</div>
-              </div>
-              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-auto" />
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+              </span>
+              Now with Gemini AI Integration
             </motion.div>
-          ))}
-        </div>
-      </motion.div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-400"
-      >
-        <span className="text-xs font-medium uppercase tracking-widest">Scroll</span>
-        <ChevronDown className="w-4 h-4" />
-      </motion.div>
+            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1] mb-6">
+              Generate{' '}
+              <span className="text-gradient">{typedText}</span>
+              <span className="animate-pulse text-indigo-600">|</span>
+              <br />
+              in seconds.
+            </h1>
+
+            <p className="text-lg text-slate-500 leading-relaxed mb-8 max-w-lg">
+              Transform your codebase into Docker containers, CI/CD pipelines, and security audits automatically. No manual configuration required.
+            </p>
+
+            <div className="flex flex-wrap gap-4 mb-12">
+              <motion.a
+                href="#workspace"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold rounded-xl shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-shadow"
+              >
+                Start Generating
+                <ArrowRight className="w-4 h-4" />
+              </motion.a>
+              <motion.a
+                href="#features"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-slate-700 font-semibold rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+              >
+                Explore Features
+              </motion.a>
+            </div>
+
+            <div className="flex items-center gap-8">
+              {stats.map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + i * 0.1 }}
+                >
+                  <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
+                  <div className="text-sm text-slate-500">{stat.label}</div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+            className="relative hidden lg:block"
+          >
+            {codeSnippets.map((snippet, i) => (
+              <motion.div
+                key={i}
+                className={cn(
+                  'absolute bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 font-mono text-xs overflow-hidden',
+                  i === 0 && 'top-0 right-0 w-72 animate-float',
+                  i === 1 && 'top-32 left-0 w-64 animate-float-delayed',
+                  i === 2 && 'bottom-0 right-12 w-60 animate-float'
+                )}
+                style={{ animationDelay: `${i * 0.5}s` }}
+                whileHover={{ scale: 1.05, rotate: 0 }}
+              >
+                <div className="flex items-center gap-1.5 mb-3">
+                  <div className={cn('w-2.5 h-2.5 rounded-full', snippet.color)} />
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                  <span className="ml-2 text-[10px] text-slate-400 uppercase tracking-wider">{snippet.lang}</span>
+                </div>
+                <pre className="text-slate-600 leading-relaxed">{snippet.code}</pre>
+              </motion.div>
+            ))}
+
+            <div className="relative z-10 mx-auto w-80 h-80">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-violet-500/10 rounded-3xl border border-indigo-100 backdrop-blur-sm flex items-center justify-center">
+                <div className="grid grid-cols-2 gap-4 p-8">
+                  <div className="w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center">
+                    <GitBranch className="w-7 h-7 text-indigo-600" />
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center">
+                    <Container className="w-7 h-7 text-blue-600" />
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center">
+                    <Shield className="w-7 h-7 text-emerald-600" />
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-white shadow-lg flex items-center justify-center">
+                    <Workflow className="w-7 h-7 text-violet-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
     </section>
   );
 }

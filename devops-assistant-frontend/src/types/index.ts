@@ -57,6 +57,7 @@ export interface PipelineStage {
   label: string;
   description?: string;
   status: PipelineStageStatus;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 
 export type TabId =
