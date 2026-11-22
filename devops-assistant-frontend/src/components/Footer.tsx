@@ -25,8 +25,8 @@ export default function Footer() {
               </span>
             </a>
             <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
-              Generate production-ready DevOps infrastructure from any codebase using AI.
-              Dockerfile, Kubernetes, Terraform, CI/CD and more — in under 60 seconds.
+              Generate starter DevOps infrastructure from any codebase using AI.
+              Dockerfile, Kubernetes, Terraform, CI/CD and more — then review before deploying.
             </p>
             <div className="flex items-center gap-3 mt-6">
               {[Code2, MessageCircle, Globe].map((Icon, i) => (

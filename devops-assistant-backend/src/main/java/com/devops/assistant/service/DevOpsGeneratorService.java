@@ -18,14 +18,14 @@ import java.util.regex.Pattern;
  * DevOpsGeneratorService — Solution A + B combined
  *
  * PROBLEM (before):
- *   This class was making 12 separate calls to the Gemini API sequentially.
+ *   This class was making one call per artifact to the Gemini API sequentially.
  *   On the free tier (15 RPM for gemini-1.5-flash, 5 RPM for gemini-2.5-flash)
  *   that instantly triggered 429 Too Many Requests errors.
  *
  * FIX applied here (Solution A — Single Unified Prompt):
- *   All 12 artifact requests are now combined into ONE structured JSON prompt.
+ *   All artifact requests are now combined into ONE structured JSON prompt.
  *   Gemini returns a single JSON object containing every field.
- *   → API calls per generation: 12 → 1
+ *   API calls per generation: 1
  *   → Free-tier 15 RPM quota stays completely safe.
  *
  * FIX applied in GeminiApiService (Solution B — Exponential Backoff):
@@ -130,7 +130,7 @@ public class DevOpsGeneratorService {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // UNIFIED PROMPT  (Solution A — 1 call instead of 12)
+    // UNIFIED PROMPT  (Solution A — 1 call instead of one per artifact)
     // ──────────────────────────────────────────────────────────────────────────
 
     private String buildUnifiedPrompt(String codeContext) {

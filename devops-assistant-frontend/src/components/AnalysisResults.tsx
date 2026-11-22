@@ -366,9 +366,9 @@ export default function AnalysisResults({ data }: AnalysisResultsProps) {
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: 'Total Files', value: tabs.length },
-                { label: 'Generators', value: '12' },
-                { label: 'AI Calls', value: '12' },
-                { label: 'Ready to Use', value: '100%' },
+                { label: 'Generators', value: '11' },
+                { label: 'AI Calls', value: '1' },
+                { label: 'Review', value: 'Required' },
               ].map((item) => (
                 <div key={item.label} className="bg-slate-50 rounded-xl p-3 text-center">
                   <div className="text-lg font-bold text-slate-900">{item.value}</div>

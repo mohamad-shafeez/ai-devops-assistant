@@ -33,7 +33,7 @@ export default function LoadingState({ currentStage }: LoadingStateProps) {
             AI Generating Infrastructure
           </div>
           <h2 className="text-2xl font-bold text-slate-900">Analyzing your codebase</h2>
-          <p className="text-slate-500 mt-2 text-sm">Running 12 generators in sequence. This takes ~30–60 seconds.</p>
+          <p className="text-slate-500 mt-2 text-sm">Generating 11 artifacts in one pass. This usually takes 30–60 seconds.</p>
         </motion.div>
 
         {/* Pipeline stages */}

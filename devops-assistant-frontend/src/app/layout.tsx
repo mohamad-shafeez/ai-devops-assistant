@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "DevOps AI — Infrastructure Generation Platform",
-  description: "Automatically generate production-ready DevOps infrastructure from your source code. Docker, CI/CD, security audits, and architecture docs in seconds.",
+  description: "Generate starter DevOps infrastructure from your source code. Docker, CI/CD, security reviews, and architecture docs in seconds, ready for human review.",
 };
 
 export default function RootLayout({
