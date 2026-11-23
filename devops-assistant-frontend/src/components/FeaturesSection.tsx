@@ -10,7 +10,7 @@ const features = [
   {
     icon: Container,
     title: 'Dockerfile Generator',
-    description: 'Multi-stage, production-ready Dockerfiles with security hardening, non-root users, and health checks.',
+    description: 'Multi-stage starter Dockerfiles with security hardening, non-root users, and health checks.',
     gradient: 'from-blue-500 to-cyan-500',
     tag: 'Core',
   },
@@ -38,7 +38,7 @@ const features = [
   {
     icon: Server,
     title: 'Helm Charts',
-    description: 'Production Helm charts with Chart.yaml, values.yaml, and templated deployment manifests.',
+    description: 'Starter Helm charts with Chart.yaml, values.yaml, and templated deployment manifests.',
     gradient: 'from-teal-500 to-emerald-500',
     tag: 'Platform',
   },
@@ -51,8 +51,8 @@ const features = [
   },
   {
     icon: Shield,
-    title: 'Security Scanner',
-    description: 'Detect hardcoded secrets, insecure dependencies, SQL injection risks, and auth gaps.',
+    title: 'Security Review',
+    description: 'LLM-assisted review of hardcoded secrets, SQL injection risks, and auth gaps.',
     gradient: 'from-rose-500 to-red-500',
     tag: 'Security',
   },
@@ -66,7 +66,7 @@ const features = [
   {
     icon: BarChart3,
     title: 'Project Health Score',
-    description: 'Comprehensive 0–100 score covering security, deployment readiness, and complexity.',
+    description: 'Derived 0-100 summary of security, deployment readiness, and complexity.',
     gradient: 'from-emerald-500 to-teal-500',
     tag: 'Insights',
   },
@@ -80,7 +80,7 @@ const features = [
   {
     icon: Zap,
     title: 'Deployment Readiness',
-    description: 'Production readiness checklist with monitoring gaps, performance, and strategy recommendations.',
+    description: 'Deployment readiness checklist with monitoring gaps, performance, and strategy recommendations.',
     gradient: 'from-yellow-500 to-amber-500',
     tag: 'Insights',
   },
@@ -114,14 +114,14 @@ export default function FeaturesSection() {
           className="text-center mb-16"
         >
           <span className="badge bg-indigo-50 text-indigo-700 border border-indigo-100 mb-4">
-            12 Generators
+            11 Artifacts + Review Scores
           </span>
           <h2 className="text-4xl font-bold text-slate-900 mb-4 mt-2">
-            Everything your project needs,{' '}
+            A review-ready starting point,{' '}
             <span className="text-gradient">automatically.</span>
           </h2>
           <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-            From containers to Kubernetes to Terraform — one codebase, complete infrastructure.
+            From containers to Kubernetes to Terraform — one codebase, a complete starter bundle.
           </p>
         </motion.div>
 

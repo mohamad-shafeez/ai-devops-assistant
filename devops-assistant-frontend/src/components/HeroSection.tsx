@@ -12,14 +12,14 @@ const codeSnippets = [
 ];
 
 const stats = [
-  { label: 'Pipelines Generated', value: '12,400+' },
-  { label: 'Time Saved', value: '840h' },
-  { label: 'Security Scans', value: '98.9%' },
+  { label: 'Artifact types', value: '11' },
+  { label: 'LLM calls per run', value: '1' },
+  { label: 'AI providers', value: '2' },
 ];
 
 export default function HeroSection() {
   const [typedText, setTypedText] = useState('');
-  const fullText = 'production-ready infrastructure';
+  const fullText = 'review-ready DevOps';
 
   useEffect(() => {
     let i = 0;
@@ -73,7 +73,7 @@ export default function HeroSection() {
             </h1>
 
             <p className="text-lg text-slate-500 leading-relaxed mb-8 max-w-lg">
-              Transform your codebase into Docker containers, CI/CD pipelines, and security audits automatically. No manual configuration required.
+              Draft Docker containers, CI/CD pipelines, and security reviews from your codebase. Review and adapt every generated file before deploying.
             </p>
 
             <div className="flex flex-wrap gap-4 mb-12">

@@ -1,6 +1,6 @@
-# 🚀 DevOpsAI Platform — AI DevOps Assistant
+# DevOpsAI Platform - AI DevOps Assistant
 
-> **An AI-powered DevOps infrastructure generator & automated static code analysis platform** that turns any codebase into production-ready Dockerfiles, Kubernetes manifests, Terraform configs, GitHub Actions CI/CD pipelines, Helm charts, security audits, and more — in seconds.
+> **An AI-assisted DevOps starter generator** that drafts Dockerfiles, Kubernetes manifests, Terraform configs, GitHub Actions workflows, Helm charts, and security/code reviews from a code sample or repository. Treat the output as a reviewed starting point, not deployment-approved production configuration.
 
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.3-6DB33F?style=for-the-badge&logo=springboot)
 ![Next.js](https://img.shields.io/badge/Next.js-14.2.5-000000?style=for-the-badge&logo=nextdotjs)
@@ -9,10 +9,12 @@
 ![Google Gemini AI](https://img.shields.io/badge/Gemini-1.5/2.5_Flash-4285F4?style=for-the-badge&logo=google)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)
 ![Docker Compose](https://img.shields.io/badge/Docker_Compose-Full_Stack-2496ED?style=for-the-badge&logo=docker)
+[![CI](https://github.com/mohamad-shafeez/ai-devops-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/mohamad-shafeez/ai-devops-assistant/actions/workflows/ci.yml)
+![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
 
 ---
 
-## 🎥 Live Demo
+## 🎥 Walkthrough
 
 📹 **Project Walkthrough (1 min 30 sec)**
 
@@ -34,7 +36,7 @@ https://drive.google.com/file/d/1SVy8shQxEdl5-cUGS9U3uJmkA_4H1TXR/view?usp=shari
 
 ## ✨ Features
 
-Provide your source code (paste code, upload files, or provide a GitHub repository URL) and DevOpsAI generates **12 production-ready DevOps artifacts** in a single pass:
+Provide your source code (paste code, upload files, or provide a GitHub repository URL) and DevOpsAI generates **11 reviewable DevOps artifacts** in a single pass:
 
 | Artifact | Description |
 |---|---|
@@ -44,12 +46,13 @@ Provide your source code (paste code, upload files, or provide a GitHub reposito
 | ☸️ **Kubernetes Manifests** | Deployment, Service, Ingress (TLS), HPA, ConfigMap in raw YAML |
 | ⛵ **Helm Chart** | Chart.yaml + values.yaml + templates/deployment.yaml |
 | 🌍 **Terraform Starter** | AWS ECS/EKS/EC2, VPC, RDS, S3 infrastructure as code (HCL) |
-| 🔐 **Security Audit** | Categorized security risks (Secrets, SQL injection, Auth gaps, Validation) |
-| 📋 **Code Review** | Static code quality analysis, performance smells, refactoring advice |
-| 🔑 **.env.example** | Complete environment variable template with inline comments |
-| 📊 **Deployment Report** | Production readiness checklist, monitoring strategy, container hardening |
-| 🏗️ **Architecture Docs** | Comprehensive system architecture & technology breakdown |
-| 💯 **Health & Risk Scores** | Calculated ratings (0–100) for security, readiness, and complexity |
+| 🔐 **Security Audit** | LLM-assisted review of secrets, SQL injection, auth gaps, and validation |
+| 📋 **Code Review** | LLM-assisted review of code quality, performance smells, and refactoring advice |
+| 🔑 **.env.example** | Environment variable template with inline comments |
+| 📊 **Deployment Report** | Deployment readiness checklist, monitoring gaps, and container hardening notes |
+| 🏗️ **Architecture Docs** | Generated system architecture and technology breakdown |
+
+Health, security, readiness, container-readiness, complexity, and risk scores are derived metadata, not additional artifact files. The `recommendations` field currently mirrors `codeReview`.
 
 ---
 
@@ -74,7 +77,7 @@ sequenceDiagram
         GH-->>Spring: File Tree Metadata (Filtered)
     end
     Spring->>Gemini: POST generateContent (Unified Single Prompt)
-    Gemini-->>Spring: Unified JSON (12 Artifacts + Scores + Tech Stack)
+    Gemini-->>Spring: Unified JSON (11 Artifacts + Scores + Tech Stack)
     Spring->>DB: Save Entity (ProjectAnalysis)
     Spring-->>NextJS: HTTP 200 OK (AnalysisResponse DTO)
     NextJS->>User: Render File Tree, Code Viewers, Score Meters & ZIP Download
@@ -143,7 +146,7 @@ ai-devops-assistant/
 
 ## ⚡ Unified LLM Prompt Engineering & Resilience
 
-- **Single-Pass Prompting:** Rather than issuing 12 separate requests, `DevOpsGeneratorService` sends a single structured JSON prompt to Gemini. Using a single structured prompt significantly reduces the number of LLM API requests compared to generating each artifact independently.
+- **Single-Pass Prompting:** Rather than issuing one request per artifact, `DevOpsGeneratorService` sends a single structured JSON prompt to Gemini. Using a single structured prompt significantly reduces the number of LLM API requests compared to generating each artifact independently.
 - **Exponential Backoff Retry:** `GeminiApiService` handles transient HTTP `429 Too Many Requests` and HTTP `503` errors by automatically retrying up to 4 times with exponential backoff delays (2s → 4s → 8s).
 - **GitHub REST API Integration:** When a GitHub URL is provided, `GithubService` queries `api.github.com` for tree metadata to feed rich repository structure into the LLM context.
 
@@ -251,7 +254,7 @@ Tests Passed: 4/4
 ## 📡 API Reference
 
 ### `POST /api/v1/analysis`
-Analyzes code or repository structure and generates 12 DevOps infrastructure artifacts.
+Analyzes code or repository structure and generates 11 DevOps starter artifacts. Generated files require review before deployment.
 
 **Request:**
 ```json
@@ -320,5 +323,5 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 <div align="center">
   <strong>Built by Mohamad Shafeez · Powered by Gemini AI</strong><br/>
-  <em>Production-Ready Full-Stack AI DevOps Assistant</em>
+  <em>Full-Stack AI DevOps Assistant</em>
 </div>
